@@ -14,7 +14,10 @@ export const metadata: Metadata = {
     "Create a karaoke night in minutes: a stunning flyer, one shareable link, RSVPs, and a collaborative YouTube song queue you run from your phone.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icons/icon-192.png",
+    icon: [
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/icons/icon-192.png",
   },
 };
