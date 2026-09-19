@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Turnstile } from "@/components/ui/turnstile";
+import { MailCheck } from "lucide-react";
 
 interface RegisterFormProps {
   googleEnabled: boolean;
@@ -19,8 +21,10 @@ export function RegisterForm({ googleEnabled, appleEnabled }: RegisterFormProps)
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkEmail, setCheckEmail] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,13 +34,20 @@ export function RegisterForm({ googleEnabled, appleEnabled }: RegisterFormProps)
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, turnstileToken }),
     });
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Something went wrong");
       setLoading(false);
+      return;
+    }
+
+    const data = await res.json();
+    if (data.needsVerification) {
+      setLoading(false);
+      setCheckEmail(true);
       return;
     }
 
@@ -47,6 +58,24 @@ export function RegisterForm({ googleEnabled, appleEnabled }: RegisterFormProps)
       return;
     }
     router.push("/dashboard");
+  }
+
+  if (checkEmail) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+          <MailCheck className="h-8 w-8 text-primary" />
+          <p className="font-display text-lg font-semibold">Check your email</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            We sent a verification link to <span className="text-foreground">{email}</span>. Click it to
+            activate your account, then log in.
+          </p>
+          <Button asChild className="mt-2">
+            <Link href="/login">Go to login</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -104,6 +133,7 @@ export function RegisterForm({ googleEnabled, appleEnabled }: RegisterFormProps)
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          <Turnstile onVerify={setTurnstileToken} />
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={loading}>
             {loading ? "Creating account..." : "Create account"}

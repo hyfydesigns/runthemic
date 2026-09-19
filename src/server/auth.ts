@@ -1,4 +1,4 @@
-import NextAuth, { type NextAuthConfig } from "next-auth";
+import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Apple from "next-auth/providers/apple";
@@ -6,6 +6,13 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/server/db";
 import { getAppleClientSecret } from "@/server/apple-client-secret";
+import { isEmailConfigured } from "@/server/email/send";
+
+// The client reads this off `signIn()`'s returned `code` to show a specific
+// "verify your email" message instead of a generic "invalid credentials" one.
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "email_not_verified";
+}
 
 // Disabled for now — Google hasn't verified this app's OAuth consent screen
 // for login yet, so "Continue with Google" would show scary warnings (or
@@ -37,6 +44,12 @@ const providers: NextAuthConfig["providers"] = [
 
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) return null;
+
+      // Only enforced once email sending is actually configured — otherwise
+      // nobody could ever verify, and we'd brick every signup. Existing
+      // accounts created before this was enabled should be backfilled with
+      // emailVerified set so they aren't locked out.
+      if (isEmailConfigured() && !user.emailVerified) throw new EmailNotVerifiedError();
 
       return { id: user.id, email: user.email, name: user.name, image: user.image };
     },

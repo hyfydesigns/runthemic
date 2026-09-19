@@ -20,25 +20,49 @@ export function LoginForm({ googleEnabled, appleEnabled }: LoginFormProps) {
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
   const oauthError = searchParams.get("error");
+  const justVerified = searchParams.get("verified") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(
-    oauthError ? "Something went wrong signing you in. Please try again." : null,
+    oauthError === "invalid_token"
+      ? "That verification link is invalid or has expired."
+      : oauthError
+        ? "Something went wrong signing you in. Please try again."
+        : null,
   );
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
   const [loading, setLoading] = useState(false);
 
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNeedsVerification(false);
+    setResendState("idle");
     setLoading(true);
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (res?.error) {
-      setError("Invalid email or password");
+      if (res.code === "email_not_verified") {
+        setNeedsVerification(true);
+        setError("Please verify your email before logging in.");
+      } else {
+        setError("Invalid email or password");
+      }
       return;
     }
     router.push(callbackUrl);
+  }
+
+  async function handleResend() {
+    setResendState("sending");
+    await fetch("/api/verify-email/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setResendState("sent");
   }
 
   return (
@@ -48,6 +72,12 @@ export function LoginForm({ googleEnabled, appleEnabled }: LoginFormProps) {
         <CardDescription>Log in to manage your karaoke nights.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {justVerified && (
+          <p className="rounded-md bg-primary/10 px-3 py-2 text-sm text-primary">
+            Email verified — you can log in now.
+          </p>
+        )}
+
         {(googleEnabled || appleEnabled) && (
           <div className="flex flex-col gap-2">
             {googleEnabled && (
@@ -92,6 +122,17 @@ export function LoginForm({ googleEnabled, appleEnabled }: LoginFormProps) {
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {needsVerification && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={resendState !== "idle"}
+              onClick={handleResend}
+            >
+              {resendState === "sent" ? "Verification email sent" : resendState === "sending" ? "Sending..." : "Resend verification email"}
+            </Button>
+          )}
           <Button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Log in"}
           </Button>

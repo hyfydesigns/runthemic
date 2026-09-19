@@ -3,6 +3,7 @@ import { prisma } from "@/server/db";
 import { rsvpSchema } from "@/lib/validation/event";
 import { submitRsvp } from "@/server/rsvp";
 import { getGuestSession, issueGuestSessionCookie } from "@/server/guest-session";
+import { verifyTurnstileToken } from "@/server/turnstile";
 
 export async function POST(req: Request, { params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -20,6 +21,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ eventId
   }
 
   const existing = await getGuestSession(eventId);
+
+  // Returning guests changing their RSVP already proved they're human the
+  // first time — only gate the initial RSVP, when a cookie doesn't exist yet.
+  if (!existing) {
+    const humanVerified = await verifyTurnstileToken(parsed.data.turnstileToken);
+    if (!humanVerified) {
+      return NextResponse.json({ error: "Spam check failed — please try again" }, { status: 400 });
+    }
+  }
+
   const { guestSession, waitlisted } = await submitRsvp(eventId, parsed.data, existing?.id ?? null);
 
   await issueGuestSessionCookie(eventId, guestSession.id);

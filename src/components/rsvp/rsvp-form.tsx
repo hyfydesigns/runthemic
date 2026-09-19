@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Turnstile } from "@/components/ui/turnstile";
 import { cn } from "@/lib/utils";
 
 interface RsvpFormProps {
@@ -25,6 +26,7 @@ export function RsvpForm({ eventId, eventSlug, initialValues }: RsvpFormProps) {
   const [displayName, setDisplayName] = useState(initialValues?.displayName ?? "");
   const [note, setNote] = useState(initialValues?.note ?? "");
   const [status, setStatus] = useState<"GOING" | "MAYBE" | "CANT_GO">(initialValues?.rsvpStatus ?? "GOING");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +38,7 @@ export function RsvpForm({ eventId, eventSlug, initialValues }: RsvpFormProps) {
     const res = await fetch(`/api/events/${eventId}/rsvp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName, note, rsvpStatus: status }),
+      body: JSON.stringify({ displayName, note, rsvpStatus: status, turnstileToken }),
     });
 
     setLoading(false);
@@ -82,6 +84,8 @@ export function RsvpForm({ eventId, eventSlug, initialValues }: RsvpFormProps) {
         <Label htmlFor="note">Note (optional)</Label>
         <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Bringing a +1, dietary notes, etc." />
       </div>
+
+      {!initialValues && <Turnstile onVerify={setTurnstileToken} />}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

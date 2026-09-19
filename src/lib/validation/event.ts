@@ -38,6 +38,7 @@ export const rsvpSchema = z.object({
   email: z.string().trim().email().optional().or(z.literal("")),
   note: z.string().trim().max(500).optional().or(z.literal("")),
   rsvpStatus: z.enum(["GOING", "MAYBE", "CANT_GO"]).default("GOING"),
+  turnstileToken: z.string().nullable().optional(),
 });
 
 export type RsvpInput = z.infer<typeof rsvpSchema>;
