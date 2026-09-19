@@ -25,7 +25,7 @@ export function InstallPrompt() {
   if (!deferred || dismissed) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-30 flex items-center justify-between gap-3 rounded-lg border border-border bg-card p-3 shadow-lg sm:left-auto sm:right-4 sm:w-80">
+    <div className="fixed inset-x-4 bottom-4 z-30 flex items-center justify-between gap-3 rounded-lg border border-border bg-card p-3 shadow-lg sm:hidden">
       <p className="text-sm">Install RunTheMic for quick access from your home screen.</p>
       <div className="flex shrink-0 items-center gap-1">
         <Button
