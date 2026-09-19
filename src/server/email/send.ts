@@ -10,6 +10,21 @@ function getClient(): Resend {
   return client;
 }
 
+/** Crude HTML-to-text fallback — good enough for our own simple templates, and having any text part at all helps deliverability. */
+function toPlainText(html: string): string {
+  return html
+    .replace(/<a\s+[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gis, "$2 ($1)")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h1|h2|h3)>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 /**
  * No-ops (just logs) when Resend isn't configured, so the app keeps working
  * in local dev or before a sending domain is set up — matching every other
@@ -26,6 +41,7 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
     to,
     subject,
     html,
+    text: toPlainText(html),
   });
 
   if (error) {
