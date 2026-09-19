@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef, useMemo } from "react";
+import { forwardRef, useImperativeHandle, useRef, useMemo, useState, useEffect } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 import type Konva from "konva";
@@ -75,12 +75,29 @@ export const FlyerCanvas = forwardRef<FlyerCanvasHandle, FlyerCanvasProps>(funct
 ) {
   const template = useMemo(() => getFlyerTemplate(templateKey), [templateKey]);
   const stageRef = useRef<Konva.Stage>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const [qrImage] = useImage(data.qrCodeUrl, "anonymous");
   const [customBgImage] = useImage(data.customBackgroundUrl ?? "", "anonymous");
 
   useImperativeHandle(ref, () => ({
     exportPng: () => stageRef.current?.toDataURL({ pixelRatio: 2 }) ?? null,
   }));
+
+  // Shrinks to fit narrow (mobile) screens instead of overflowing them —
+  // `displayScale` is the max/desktop size, never exceeded even on wide screens.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const scale = containerWidth ? Math.min(displayScale, containerWidth / template.width) : displayScale;
 
   const title = data.titleOverride?.trim() || data.name;
   const subtitle =
@@ -107,95 +124,92 @@ export const FlyerCanvas = forwardRef<FlyerCanvasHandle, FlyerCanvasProps>(funct
       : { fill: bgFrom ?? "#000000" };
 
   return (
-    <div
-      style={{
-        width: template.width * displayScale,
-        height: template.height * displayScale,
-        overflow: "hidden",
-        borderRadius: 12,
-        border: "1px solid hsl(var(--border))",
-      }}
-    >
-      <Stage
-        ref={stageRef}
-        width={template.width}
-        height={template.height}
-        scaleX={displayScale}
-        scaleY={displayScale}
+    <div ref={containerRef} style={{ width: "100%", maxWidth: template.width * displayScale }}>
+      <div
+        style={{
+          width: template.width * scale,
+          height: template.height * scale,
+          overflow: "hidden",
+          borderRadius: 12,
+          border: "1px solid hsl(var(--border))",
+          margin: "0 auto",
+        }}
       >
-        <Layer>
-          {customBgImage ? (
-            <>
-              <KonvaImage
-                image={customBgImage}
-                {...coverFit(customBgImage.width, customBgImage.height, template.width, template.height)}
-              />
-              {/* Scrim so title/date/location stay legible over an arbitrary photo or generated pattern. */}
-              <Rect x={0} y={0} width={template.width} height={template.height} fill="#000000" opacity={0.4} />
-            </>
-          ) : (
-            <Rect x={0} y={0} width={template.width} height={template.height} {...gradientProps} />
-          )}
+        <Stage ref={stageRef} width={template.width} height={template.height} scaleX={scale} scaleY={scale}>
+          <Layer>
+            {customBgImage ? (
+              <>
+                <KonvaImage
+                  image={customBgImage}
+                  {...coverFit(customBgImage.width, customBgImage.height, template.width, template.height)}
+                />
+                {/* Scrim so title/date/location stay legible over an arbitrary photo or generated pattern. */}
+                <Rect x={0} y={0} width={template.width} height={template.height} fill="#000000" opacity={0.4} />
+              </>
+            ) : (
+              <Rect x={0} y={0} width={template.width} height={template.height} {...gradientProps} />
+            )}
 
-          <Text
-            x={60}
-            y={template.title.y}
-            width={titleAreaWidth}
-            height={titleBoxHeight}
-            text={title}
-            fontSize={template.title.fontSize}
-            fontFamily={template.fontFamily}
-            fontStyle="bold"
-            fill={template.textColor}
-            align="center"
-            wrap="word"
-            ellipsis
-          />
-          <Text
-            x={60}
-            y={template.subtitle.y + titleShift}
-            width={template.width - 120}
-            text={subtitle}
-            fontSize={template.subtitle.fontSize}
-            fontFamily={template.fontFamily}
-            fill={template.accentColor}
-            align="center"
-          />
-          <Text
-            x={60}
-            y={template.meta.y + titleShift}
-            width={template.width - 120}
-            text={data.locationLabel}
-            fontSize={template.meta.fontSize}
-            fontFamily={template.fontFamily}
-            fill={template.textColor}
-            align="center"
-            opacity={0.85}
-          />
-
-          {template.showQr && qrImage && (
-            <KonvaImage
-              image={qrImage}
-              x={template.width / 2 - 110}
-              y={template.cta.y - 260 + titleShift}
-              width={220}
-              height={220}
+            <Text
+              x={60}
+              y={template.title.y}
+              width={titleAreaWidth}
+              height={titleBoxHeight}
+              text={title}
+              fontSize={template.title.fontSize}
+              fontFamily={template.fontFamily}
+              fontStyle="bold"
+              fill={template.textColor}
+              align="center"
+              wrap="word"
+              ellipsis
             />
-          )}
+            <Text
+              x={60}
+              y={template.subtitle.y + titleShift}
+              width={template.width - 120}
+              text={subtitle}
+              fontSize={template.subtitle.fontSize}
+              fontFamily={template.fontFamily}
+              fill={template.accentColor}
+              align="center"
+            />
+            <Text
+              x={60}
+              y={template.meta.y + titleShift}
+              width={template.width - 120}
+              text={data.locationLabel}
+              fontSize={template.meta.fontSize}
+              fontFamily={template.fontFamily}
+              fill={template.textColor}
+              align="center"
+              opacity={0.85}
+            />
 
-          <Text
-            x={60}
-            y={template.cta.y + titleShift}
-            width={template.width - 120}
-            text={template.cta.text}
-            fontSize={template.cta.fontSize}
-            fontFamily={template.fontFamily}
-            fontStyle="bold"
-            fill={template.accentColor}
-            align="center"
-          />
-        </Layer>
-      </Stage>
+            {template.showQr && qrImage && (
+              <KonvaImage
+                image={qrImage}
+                x={template.width / 2 - 110}
+                y={template.cta.y - 260 + titleShift}
+                width={220}
+                height={220}
+              />
+            )}
+
+            <Text
+              x={60}
+              y={template.cta.y + titleShift}
+              width={template.width - 120}
+              text={template.cta.text}
+              fontSize={template.cta.fontSize}
+              fontFamily={template.fontFamily}
+              fontStyle="bold"
+              fill={template.accentColor}
+              align="center"
+            />
+          </Layer>
+        </Stage>
+      </div>
     </div>
   );
 });
