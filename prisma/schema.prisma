@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- AUTH ----------
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  passwordHash      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  organizedEvents   Event[]            @relation("EventOrganizer")
+  eventMemberships  EventMember[]
+  youtubeConnection YoutubeConnection?
+  notificationPref  NotificationPref?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ---------- YOUTUBE ----------
+
+model YoutubeConnection {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  googleAccountEmail    String
+  encryptedRefreshToken String    @db.Text
+  accessTokenExpiresAt  DateTime?
+  scope                 String
+  isValid               Boolean   @default(true)
+  defaultPlaylistPrivacy String   @default("unlisted")
+  connectedAt           DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("youtube_connections")
+}
+
+// ---------- EVENTS ----------
+
+enum EventPrivacy {
+  PUBLIC
+  PRIVATE
+  LINK_ONLY
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model Event {
+  id                 String       @id @default(cuid())
+  organizerId        String
+  slug               String       @unique
+  name               String
+  description        String?      @db.Text
+  startsAt           DateTime
+  endsAt             DateTime?
+  timezone           String       @default("UTC")
+  isVirtual          Boolean      @default(false)
+  locationName       String?
+  locationAddress    String?
+  virtualLink        String?
+  capacity            Int?
+  privacy            EventPrivacy @default(LINK_ONLY)
+  coverImageUrl      String?
+  themeColor         String?
+  ticketPriceCents   Int?
+  donationLinkUrl    String?
+  dressCode          String?
+  ageRestriction     String?
+  byobNotes          String?      @db.Text
+  status             EventStatus  @default(DRAFT)
+  autoApproveRequests Boolean     @default(false)
+  qrCodeUrl          String?
+  tvDisplayToken     String       @unique @default(cuid())
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  duplicatedFromId   String?
+
+  organizer      User           @relation("EventOrganizer", fields: [organizerId], references: [id])
+  duplicatedFrom Event?         @relation("EventDuplicate", fields: [duplicatedFromId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  duplicates     Event[]        @relation("EventDuplicate")
+  members        EventMember[]
+  guests         GuestSession[]
+  queueItems     QueueItem[]
+  playlist       EventPlaylist?
+  flyerConfig    FlyerConfig?
+
+  @@index([organizerId])
+  @@map("events")
+}
+
+enum EventMemberRole {
+  ORGANIZER
+  COHOST_FULL
+  COHOST_SONGS
+  COHOST_RSVPS
+}
+
+model EventMember {
+  id         String          @id @default(cuid())
+  eventId    String
+  userId     String
+  role       EventMemberRole
+  invitedAt  DateTime        @default(now())
+  acceptedAt DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_members")
+}
+
+// ---------- GUESTS ----------
+
+enum RsvpStatus {
+  GOING
+  MAYBE
+  CANT_GO
+  WAITLISTED
+}
+
+model GuestSession {
+  id           String     @id @default(cuid())
+  eventId      String
+  displayName  String
+  email        String?
+  note         String?
+  rsvpStatus   RsvpStatus @default(GOING)
+  waitlisted   Boolean    @default(false)
+  sessionToken String     @unique @default(cuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  event        Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  songRequests QueueItem[]
+
+  @@index([eventId])
+  @@map("guest_sessions")
+}
+
+// ---------- SONG QUEUE ----------
+
+enum QueueItemStatus {
+  PENDING
+  APPROVED
+  PLAYING
+  PLAYED
+  REJECTED
+  REMOVED
+}
+
+model QueueItem {
+  id                   String          @id @default(cuid())
+  eventId              String
+  guestSessionId       String?
+  youtubeVideoId       String
+  youtubeVideoTitle    String
+  youtubeChannelTitle  String?
+  thumbnailUrl         String?
+  durationSeconds      Int?
+  requestedBy          String?
+  status               QueueItemStatus @default(PENDING)
+  position             Int             @default(0)
+  isPriority           Boolean         @default(false)
+  youtubePlaylistItemId String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  playedAt             DateTime?
+
+  event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestSession GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, status, position])
+  @@map("queue_items")
+}
+
+model EventPlaylist {
+  id                 String   @id @default(cuid())
+  eventId            String   @unique
+  youtubePlaylistId  String
+  youtubePlaylistUrl String
+  ownerUserId        String
+  privacyStatus      String   @default("unlisted")
+  createdAt          DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_playlists")
+}
+
+// ---------- FLYER ----------
+
+enum FlyerTemplateKey {
+  NEON
+  RETRO
+  MODERN_MINIMAL
+  PARTY
+  ELEGANT
+}
+
+model FlyerConfig {
+  id             String           @id @default(cuid())
+  eventId        String           @unique
+  templateKey    FlyerTemplateKey @default(NEON)
+  fieldOverrides Json             @default("{}")
+  exportedPngUrl String?
+  updatedAt      DateTime         @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("flyer_configs")
+}
+
+// ---------- MISC ----------
+
+model NotificationPref {
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  emailOnNewRsvp     Boolean @default(true)
+  emailOnSongRequest Boolean @default(false)
+  emailDigest        Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_prefs")
+}

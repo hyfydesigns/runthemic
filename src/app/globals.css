@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 0.75rem;
+}
+
+:root,
+:root[data-theme="dark"] {
+  --background: 250 30% 6%;
+  --foreground: 210 40% 98%;
+  --card: 250 25% 9%;
+  --card-foreground: 210 40% 98%;
+  --border: 250 20% 18%;
+  --input: 250 20% 18%;
+  --ring: 291 90% 65%;
+  --primary: 291 90% 65%;
+  --primary-foreground: 250 30% 6%;
+  --secondary: 190 90% 55%;
+  --secondary-foreground: 250 30% 6%;
+  --muted: 250 20% 16%;
+  --muted-foreground: 220 15% 65%;
+  --accent: 250 20% 16%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --neon-pink: 330 100% 62%;
+  --neon-cyan: 190 100% 55%;
+  --neon-purple: 291 90% 65%;
+  --neon-lime: 84 100% 60%;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --background: 240 20% 98%;
+    --foreground: 250 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 250 30% 8%;
+    --border: 240 15% 88%;
+    --input: 240 15% 88%;
+    --ring: 291 80% 55%;
+    --primary: 291 80% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 190 80% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 15% 94%;
+    --muted-foreground: 240 10% 40%;
+    --accent: 240 15% 94%;
+    --accent-foreground: 250 30% 8%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+  }
+}
+
+:root[data-theme="light"] {
+  --background: 240 20% 98%;
+  --foreground: 250 30% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 250 30% 8%;
+  --border: 240 15% 88%;
+  --input: 240 15% 88%;
+  --ring: 291 80% 55%;
+  --primary: 291 80% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 190 80% 40%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 15% 94%;
+  --muted-foreground: 240 10% 40%;
+  --accent: 240 15% 94%;
+  --accent-foreground: 250 30% 8%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.text-gradient-neon {
+  background: linear-gradient(90deg, hsl(var(--neon-pink)), hsl(var(--neon-purple)), hsl(var(--neon-cyan)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
