@@ -29,8 +29,8 @@ const features = [
 export default function LandingPage() {
   return (
     <main className="flex min-h-dvh flex-col">
-      <div className="mx-auto w-full max-w-5xl px-6 pt-10">
-        <header className="flex items-center justify-between">
+      <div className="mx-auto w-full max-w-5xl px-6">
+        <header className="flex items-center justify-between py-6">
           <span className="font-display text-xl font-bold tracking-tight text-gradient-neon">RunTheMic</span>
           <nav className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
