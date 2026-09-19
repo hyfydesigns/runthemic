@@ -83,6 +83,14 @@ body {
   color: hsl(var(--foreground));
 }
 
+/* Native date/time picker icon renders dark-on-dark by default — invert it to read against this app's dark theme. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(1);
+}
+
 .text-gradient-neon {
   background: linear-gradient(90deg, hsl(var(--neon-pink)), hsl(var(--neon-purple)), hsl(var(--neon-cyan)));
   -webkit-background-clip: text;
