@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { CopyLinkButton } from "@/components/event/copy-link-button";
 import { DuplicateButton } from "@/components/event/duplicate-button";
 import { DeleteEventButton } from "@/components/event/delete-event-button";
+import { StepList } from "@/components/ui/step-list";
 import {
   Calendar,
   MapPin,
@@ -105,19 +106,14 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </CardContent>
-        <CardContent className="flex flex-col gap-3 border-t border-border pt-4">
-          {[
-            "Share this link (or the QR code above) with your guests — text it, post it, or print it on the flyer.",
-            "Guests open it, RSVP, and can then search for and request songs — no account needed.",
-            "Approve requests as they come in (or turn on auto-approve in Edit), then run the night from Host mode.",
-          ].map((step, i) => (
-            <div key={step} className="flex items-start gap-3 text-sm">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                {i + 1}
-              </span>
-              <p className="text-muted-foreground">{step}</p>
-            </div>
-          ))}
+        <CardContent className="border-t border-border pt-4">
+          <StepList
+            steps={[
+              "Share this link (or the QR code above) with your guests — text it, post it, or print it on the flyer.",
+              "Guests open it, RSVP, and can then search for and request songs — no account needed.",
+              "Approve requests as they come in (or turn on auto-approve in Edit), then run the night from Host mode.",
+            ]}
+          />
         </CardContent>
       </Card>
 
