@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CopyLinkButton } from "@/components/event/copy-link-button";
 import { DuplicateButton } from "@/components/event/duplicate-button";
+import { DeleteEventButton } from "@/components/event/delete-event-button";
 import {
   Calendar,
   MapPin,
@@ -74,6 +75,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             </Link>
           </Button>
           <DuplicateButton eventId={event.id} />
+          {isOrganizer && <DeleteEventButton eventId={event.id} eventName={event.name} />}
         </div>
       </div>
 
