@@ -46,6 +46,10 @@ if (isGoogleLoginConfigured()) {
       // Basic profile/email only — YouTube playlist access is requested
       // separately from Settings > YouTube, never bundled into login.
       authorization: { params: { scope: "openid email profile" } },
+      // Google verifies the email itself, so it's safe to link this
+      // sign-in to an existing password account with the same address
+      // instead of throwing OAuthAccountNotLinked.
+      allowDangerousEmailAccountLinking: true,
     }),
   );
 }
@@ -56,6 +60,7 @@ if (appleClientSecret && process.env.APPLE_CLIENT_ID) {
     Apple({
       clientId: process.env.APPLE_CLIENT_ID,
       clientSecret: appleClientSecret,
+      allowDangerousEmailAccountLinking: true,
     }),
   );
 }
@@ -71,7 +76,7 @@ export const authConfig: NextAuthConfig = {
   // with "UntrustedHost" since it can't otherwise verify the forwarded Host
   // header. NEXTAUTH_URL is still set explicitly, so this is safe.
   trustHost: true,
-  pages: { signIn: "/login" },
+  pages: { signIn: "/login", error: "/login" },
   providers,
   callbacks: {
     async jwt({ token, user }) {
