@@ -7,8 +7,13 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/server/db";
 import { getAppleClientSecret } from "@/server/apple-client-secret";
 
+// Disabled for now — Google hasn't verified this app's OAuth consent screen
+// for login yet, so "Continue with Google" would show scary warnings (or
+// fail) for anyone not added as a test user. YouTube integration is
+// unaffected: it uses its own OAuth client, built separately in
+// server/youtube/client.ts, not the NextAuth provider gated by this flag.
 export function isGoogleLoginConfigured(): boolean {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return false;
 }
 
 export async function isAppleLoginConfigured(): Promise<boolean> {
