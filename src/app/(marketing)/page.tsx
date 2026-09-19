@@ -89,8 +89,16 @@ export default function LandingPage() {
           ))}
         </section>
 
-        <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} RunTheMic
+        <footer className="flex flex-col items-center gap-2 border-t border-border py-6 text-center text-xs text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} RunTheMic</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-foreground">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground">
+              Terms of Service
+            </Link>
+          </div>
         </footer>
       </div>
     </main>

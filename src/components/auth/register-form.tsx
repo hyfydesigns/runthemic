@@ -138,6 +138,17 @@ export function RegisterForm({ googleEnabled, appleEnabled }: RegisterFormProps)
           <Button type="submit" disabled={loading}>
             {loading ? "Creating account..." : "Create account"}
           </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            By creating an account, you agree to RunTheMic&apos;s{" "}
+            <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">

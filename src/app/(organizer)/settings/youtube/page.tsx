@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getOrganizerSession } from "@/server/auth";
 import { prisma } from "@/server/db";
@@ -66,6 +67,32 @@ export default async function YoutubeSettingsPage({
           <YoutubeConnectPanel connected={Boolean(connection?.isValid)} configured={configured} />
         </CardContent>
       </Card>
+
+      <p className="text-xs text-muted-foreground">
+        RunTheMic uses YouTube API Services. By connecting, you agree to the{" "}
+        <a
+          href="https://www.youtube.com/t/terms"
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          YouTube Terms of Service
+        </a>{" "}
+        and acknowledge RunTheMic&apos;s{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+          Privacy Policy
+        </Link>
+        . You can revoke access anytime from{" "}
+        <a
+          href="https://myaccount.google.com/permissions"
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          Google&apos;s security settings
+        </a>
+        .
+      </p>
     </div>
   );
 }
