@@ -3,6 +3,7 @@ import { getOrganizerSession } from "@/server/auth";
 import { prisma } from "@/server/db";
 import { hasEventPermission } from "@/server/permissions";
 import { HostController } from "@/components/queue/host-controller";
+import { BackToEventLink } from "@/components/event/back-to-event-link";
 
 export default async function HostModePage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -17,9 +18,12 @@ export default async function HostModePage({ params }: { params: Promise<{ event
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Host mode</h1>
-        <p className="text-sm text-muted-foreground">{event.name}</p>
+      <div className="flex flex-col gap-2">
+        <BackToEventLink eventId={event.id} />
+        <div>
+          <h1 className="font-display text-2xl font-bold">Host mode</h1>
+          <p className="text-sm text-muted-foreground">{event.name}</p>
+        </div>
       </div>
       <HostController eventId={event.id} />
     </div>

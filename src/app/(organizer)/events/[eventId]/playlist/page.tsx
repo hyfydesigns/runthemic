@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { hasEventPermission } from "@/server/permissions";
 import { isYoutubeConfigured } from "@/server/youtube/client";
 import { OrganizerPlaylistView } from "@/components/queue/organizer-playlist-view";
+import { BackToEventLink } from "@/components/event/back-to-event-link";
 
 export default async function EventPlaylistPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -18,9 +19,12 @@ export default async function EventPlaylistPage({ params }: { params: Promise<{ 
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Song queue</h1>
-        <p className="text-sm text-muted-foreground">{event.name}</p>
+      <div className="flex flex-col gap-2">
+        <BackToEventLink eventId={event.id} />
+        <div>
+          <h1 className="font-display text-2xl font-bold">Song queue</h1>
+          <p className="text-sm text-muted-foreground">{event.name}</p>
+        </div>
       </div>
       <OrganizerPlaylistView eventId={event.id} youtubeConfigured={isYoutubeConfigured()} />
     </div>

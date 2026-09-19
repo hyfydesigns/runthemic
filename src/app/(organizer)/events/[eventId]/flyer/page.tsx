@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { hasEventPermission } from "@/server/permissions";
 import { getEventPublicUrl } from "@/lib/qrcode";
 import { FlyerEditor } from "@/components/flyer/flyer-editor";
+import { BackToEventLink } from "@/components/event/back-to-event-link";
 
 export default async function FlyerPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -26,11 +27,14 @@ export default async function FlyerPage({ params }: { params: Promise<{ eventId:
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Flyer</h1>
-        <p className="text-sm text-muted-foreground">
-          Auto-updates with your event details — edit the event to change them everywhere.
-        </p>
+      <div className="flex flex-col gap-2">
+        <BackToEventLink eventId={event.id} />
+        <div>
+          <h1 className="font-display text-2xl font-bold">Flyer</h1>
+          <p className="text-sm text-muted-foreground">
+            Auto-updates with your event details — edit the event to change them everywhere.
+          </p>
+        </div>
       </div>
       <FlyerEditor
         eventId={event.id}

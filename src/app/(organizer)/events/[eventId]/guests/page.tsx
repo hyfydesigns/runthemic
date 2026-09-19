@@ -4,6 +4,7 @@ import { getOrganizerSession } from "@/server/auth";
 import { prisma } from "@/server/db";
 import { hasEventPermission } from "@/server/permissions";
 import { Card, CardContent } from "@/components/ui/card";
+import { BackToEventLink } from "@/components/event/back-to-event-link";
 import { RSVP_STATUS_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +38,12 @@ export default async function EventGuestsPage({ params }: { params: Promise<{ ev
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Guests</h1>
-        <p className="text-sm text-muted-foreground">{event.name}</p>
+      <div className="flex flex-col gap-2">
+        <BackToEventLink eventId={event.id} />
+        <div>
+          <h1 className="font-display text-2xl font-bold">Guests</h1>
+          <p className="text-sm text-muted-foreground">{event.name}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
