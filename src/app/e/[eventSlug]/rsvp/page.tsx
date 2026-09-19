@@ -40,11 +40,17 @@ export default async function RsvpPage({ params }: { params: Promise<{ eventSlug
           guestSession && guestSession.rsvpStatus !== "WAITLISTED"
             ? {
                 displayName: guestSession.displayName,
+                email: guestSession.email ?? "",
                 note: guestSession.note ?? "",
                 rsvpStatus: guestSession.rsvpStatus as "GOING" | "MAYBE" | "CANT_GO",
               }
             : guestSession
-              ? { displayName: guestSession.displayName, note: guestSession.note ?? "", rsvpStatus: "GOING" }
+              ? {
+                  displayName: guestSession.displayName,
+                  email: guestSession.email ?? "",
+                  note: guestSession.note ?? "",
+                  rsvpStatus: "GOING",
+                }
               : undefined
         }
       />

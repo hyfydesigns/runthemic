@@ -3,15 +3,17 @@ import { redirect } from "next/navigation";
 import { getOrganizerSession } from "@/server/auth";
 import { prisma } from "@/server/db";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Youtube, User } from "lucide-react";
+import { NotificationPrefsPanel } from "@/components/settings/notification-prefs-panel";
+import { Youtube, User, Bell } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await getOrganizerSession();
   if (!session) redirect("/login");
 
-  const [user, youtubeConnection] = await Promise.all([
+  const [user, youtubeConnection, notificationPref] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),
     prisma.youtubeConnection.findUnique({ where: { userId: session.user.id } }),
+    prisma.notificationPref.findUnique({ where: { userId: session.user.id } }),
   ]);
 
   return (
@@ -43,6 +45,16 @@ export default async function SettingsPage() {
           </CardHeader>
         </Card>
       </Link>
+
+      <Card>
+        <CardHeader className="flex-row items-center gap-3 space-y-0">
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          <CardTitle className="text-base">Notifications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <NotificationPrefsPanel initialEmailOnNewRsvp={notificationPref?.emailOnNewRsvp ?? true} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

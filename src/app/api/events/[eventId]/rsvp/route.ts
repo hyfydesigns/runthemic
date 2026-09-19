@@ -4,6 +4,7 @@ import { rsvpSchema } from "@/lib/validation/event";
 import { submitRsvp } from "@/server/rsvp";
 import { getGuestSession, issueGuestSessionCookie } from "@/server/guest-session";
 import { verifyTurnstileToken } from "@/server/turnstile";
+import { notifyRsvp } from "@/server/notifications";
 
 export async function POST(req: Request, { params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -34,6 +35,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ eventId
   const { guestSession, waitlisted } = await submitRsvp(eventId, parsed.data, existing?.id ?? null);
 
   await issueGuestSessionCookie(eventId, guestSession.id);
+
+  // Fire-and-forget: emails shouldn't hold up the guest's RSVP response.
+  notifyRsvp(eventId, guestSession, !existing).catch((err) => console.error("[notifyRsvp] failed:", err));
 
   return NextResponse.json({ guestSession, waitlisted });
 }

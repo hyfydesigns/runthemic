@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 interface RsvpFormProps {
   eventId: string;
   eventSlug: string;
-  initialValues?: { displayName: string; note: string; rsvpStatus: "GOING" | "MAYBE" | "CANT_GO" };
+  initialValues?: { displayName: string; email: string; note: string; rsvpStatus: "GOING" | "MAYBE" | "CANT_GO" };
 }
 
 const STATUS_OPTIONS = [
@@ -24,6 +24,7 @@ const STATUS_OPTIONS = [
 export function RsvpForm({ eventId, eventSlug, initialValues }: RsvpFormProps) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialValues?.displayName ?? "");
+  const [email, setEmail] = useState(initialValues?.email ?? "");
   const [note, setNote] = useState(initialValues?.note ?? "");
   const [status, setStatus] = useState<"GOING" | "MAYBE" | "CANT_GO">(initialValues?.rsvpStatus ?? "GOING");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export function RsvpForm({ eventId, eventSlug, initialValues }: RsvpFormProps) {
     const res = await fetch(`/api/events/${eventId}/rsvp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName, note, rsvpStatus: status, turnstileToken }),
+      body: JSON.stringify({ displayName, email, note, rsvpStatus: status, turnstileToken }),
     });
 
     setLoading(false);
@@ -57,6 +58,18 @@ export function RsvpForm({ eventId, eventSlug, initialValues }: RsvpFormProps) {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="displayName">Your name</Label>
         <Input id="displayName" required value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="email">Email (optional)</Label>
+        <Input
+          id="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="For a confirmation — never shared with anyone else"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
