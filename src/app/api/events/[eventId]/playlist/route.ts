@@ -4,7 +4,7 @@ import { getOrganizerSession } from "@/server/auth";
 import { getGuestSession } from "@/server/guest-session";
 import { hasEventPermission } from "@/server/permissions";
 import { getEventQueueSnapshot } from "@/server/queue";
-import { ensureEventPlaylist, syncAllUnsyncedQueueItems } from "@/server/youtube/playlist";
+import { ensureEventPlaylist, syncAllUnsyncedQueueItems, googleErrorReason } from "@/server/youtube/playlist";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -44,7 +44,25 @@ export async function POST(_req: Request, { params }: { params: Promise<{ eventI
   const allowed = await hasEventPermission(eventId, session.user.id, "manage_songs");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const playlist = await ensureEventPlaylist(eventId);
-  const synced = playlist ? await syncAllUnsyncedQueueItems(eventId) : 0;
-  return NextResponse.json({ playlist, synced });
+  try {
+    const playlist = await ensureEventPlaylist(eventId, { verifyOnYoutube: true });
+    const synced = playlist ? await syncAllUnsyncedQueueItems(eventId) : 0;
+    return NextResponse.json({ playlist, synced });
+  } catch (err) {
+    if (googleErrorReason(err) === "youtubeSignupRequired") {
+      return NextResponse.json(
+        {
+          error: "no_youtube_channel",
+          message:
+            "That Google account doesn't have a YouTube channel yet. Visit youtube.com signed in as that account to create one, then try again.",
+        },
+        { status: 422 },
+      );
+    }
+    console.error(`Failed to create/sync playlist for event ${eventId}`, err);
+    return NextResponse.json(
+      { error: "sync_failed", message: "Couldn't sync to YouTube. Please try again." },
+      { status: 500 },
+    );
+  }
 }

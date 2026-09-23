@@ -11,16 +11,32 @@ export async function getEventOrganizerYoutubeClient(eventId: string) {
  * Creates (or returns the existing) YouTube playlist for an event, owned by
  * the organizer's connected account. Returns null if the organizer hasn't
  * connected YouTube — callers should treat the queue as DB-only in that case.
+ *
+ * With `verifyOnYoutube: true`, an existing DB record isn't trusted blindly
+ * — it's confirmed to still exist on YouTube first (an organizer may have
+ * deleted the playlist directly on youtube.com), and a fresh one is created
+ * to replace it if it's gone. That's an extra API call, so it's opt-in:
+ * used for the manual "Sync to YouTube" button, not the automatic per-song
+ * sync that runs on every guest request.
  */
-export async function ensureEventPlaylist(eventId: string) {
+export async function ensureEventPlaylist(eventId: string, options?: { verifyOnYoutube?: boolean }) {
   const existing = await prisma.eventPlaylist.findUnique({ where: { eventId } });
-  if (existing) return existing;
+  if (existing && !options?.verifyOnYoutube) return existing;
 
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) throw new Error("Event not found");
 
   const client = await getEventOrganizerYoutubeClient(eventId);
-  if (!client) return null;
+  if (!client) return existing ?? null;
+
+  if (existing) {
+    const check = await client.playlists.list({ id: [existing.youtubePlaylistId], part: ["id"] });
+    if (check.data.items && check.data.items.length > 0) return existing;
+
+    // Gone on YouTube's side (e.g. deleted directly on youtube.com) — drop
+    // the stale record and fall through to create a replacement.
+    await prisma.eventPlaylist.delete({ where: { eventId } });
+  }
 
   const connection = await prisma.youtubeConnection.findUnique({ where: { userId: event.organizerId } });
   const privacyStatus = connection?.defaultPlaylistPrivacy ?? "unlisted";
@@ -76,8 +92,19 @@ export async function syncAddToYoutubePlaylist(eventId: string, queueItemId: str
       });
     }
   } catch (err) {
-    console.error(`Failed to sync queue item ${queueItemId} to YouTube playlist`, err);
-    if (isAuthError(err)) {
+    const reason = googleErrorReason(err);
+    console.error(
+      `Failed to sync queue item ${queueItemId} to YouTube playlist: ${errorSummary(err)}` +
+        (reason === "youtubeSignupRequired"
+          ? " — this Google account has no YouTube channel yet (visit youtube.com signed in as that account to create one)."
+          : ""),
+    );
+    // A 401/403 alone isn't a reliable "this connection is dead" signal —
+    // e.g. youtubeSignupRequired (no YouTube channel on the connected
+    // account) is also a 401, but reconnecting wouldn't fix it and marking
+    // the connection invalid here just misleads the organizer into thinking
+    // they need to reconnect when they actually need to set up a channel.
+    if (isDeadCredentialError(err)) {
       const event = await prisma.event.findUnique({ where: { id: eventId }, select: { organizerId: true } });
       if (event) await markYoutubeConnectionInvalid(event.organizerId);
     }
@@ -127,7 +154,33 @@ export async function syncRemoveFromYoutubePlaylist(eventId: string, youtubePlay
   }
 }
 
-function isAuthError(err: unknown): boolean {
-  const code = (err as { code?: number })?.code;
-  return code === 401 || code === 403;
+interface GoogleApiError {
+  code?: number;
+  message?: string;
+  response?: { data?: { error?: { message?: string; errors?: { reason?: string }[] } } };
+}
+
+export function googleErrorReason(err: unknown): string | undefined {
+  return (err as GoogleApiError)?.response?.data?.error?.errors?.[0]?.reason;
+}
+
+function errorSummary(err: unknown): string {
+  const e = err as GoogleApiError;
+  const reason = googleErrorReason(err);
+  return [e?.code, reason, e?.response?.data?.error?.message ?? e?.message].filter(Boolean).join(" — ");
+}
+
+// Reasons YouTube returns as a 401/403 that are about the connected
+// account's *state*, not the credential — reconnecting wouldn't fix these,
+// so they shouldn't mark the connection invalid.
+const NON_AUTH_REASONS = new Set([
+  "youtubeSignupRequired", // connected Google account has no YouTube channel
+]);
+
+/** Treats a 401/403 as a dead credential unless it's a known account-state reason instead. */
+function isDeadCredentialError(err: unknown): boolean {
+  const code = (err as GoogleApiError)?.code;
+  if (code !== 401 && code !== 403) return false;
+  const reason = googleErrorReason(err);
+  return !(reason && NON_AUTH_REASONS.has(reason));
 }

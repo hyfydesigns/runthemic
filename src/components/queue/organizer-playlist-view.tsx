@@ -62,13 +62,13 @@ function OrganizerPlaylistInner({ eventId, youtubeConfigured }: { eventId: strin
     const res = await fetch(`/api/events/${eventId}/playlist`, { method: "POST" });
     const data = await res.json().catch(() => ({}));
     setSyncing(false);
-    setSyncMessage(
-      typeof data.synced === "number"
-        ? data.synced > 0
-          ? `Synced ${data.synced} song${data.synced === 1 ? "" : "s"} to YouTube.`
-          : "Everything is already synced."
-        : "Couldn't sync — check that YouTube is still connected.",
-    );
+    if (typeof data.synced === "number") {
+      setSyncMessage(data.synced > 0 ? `Synced ${data.synced} song${data.synced === 1 ? "" : "s"} to YouTube.` : "Everything is already synced.");
+    } else if (typeof data.message === "string") {
+      setSyncMessage(data.message);
+    } else {
+      setSyncMessage("Couldn't sync — please try again.");
+    }
     refetch();
   }
 
