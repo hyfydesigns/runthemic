@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <div className="flex flex-col gap-8 text-sm leading-relaxed text-muted-foreground">
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Privacy Policy</h1>
-          <p className="mt-2 text-xs">Last updated: September 19, 2026</p>
+          <p className="mt-2 text-xs">Last updated: October 27, 2026</p>
         </div>
 
         <p>
@@ -31,8 +31,7 @@ export default function PrivacyPage() {
         <Section title="Information we collect">
           <p>
             <strong className="text-foreground">Organizers</strong> — when you create an account, we collect
-            your name, email address, and a securely hashed password. If you sign in with Google, we receive
-            your name, email, and profile picture from Google instead of a password.
+            your name, email address, and a securely hashed password.
           </p>
           <p>
             <strong className="text-foreground">Guests</strong> — RSVPing to an event doesn&apos;t require an
@@ -99,6 +98,74 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Google user data">
+          <p>
+            This section describes how RunTheMic handles data it receives from Google when an organizer
+            connects a YouTube account.
+          </p>
+          <p>
+            <strong className="text-foreground">What we access.</strong>
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              The email address of the connected Google account (and basic profile information that Google
+              includes with it). We store only the email address, to show which account is connected.
+            </li>
+            <li>
+              YouTube video search results (video titles, channel names, thumbnails, and durations) used to
+              let guests find karaoke tracks.
+            </li>
+            <li>
+              The playlist RunTheMic creates for an event on the connected account, and the songs it adds to or
+              removes from that playlist. We also check that this playlist still exists before syncing to it.
+            </li>
+          </ul>
+          <p>
+            We do not access your uploaded videos, other playlists, subscriptions, comments, watch history, or
+            any other YouTube data.
+          </p>
+          <p>
+            <strong className="text-foreground">How we use it.</strong> Only to provide the features you see:
+            showing which account is connected, searching for songs, and keeping an event&apos;s YouTube playlist in
+            sync with its song queue. We don&apos;t use it for advertising, profiling, or to develop, improve, or
+            train AI or machine-learning models.
+          </p>
+          <p>
+            <strong className="text-foreground">Who we share it with.</strong> No one. We don&apos;t sell or
+            transfer Google user data to third parties. It is processed only on our own application servers, and
+            the connection record is stored in our database with our hosting provider, Railway. We disclose it
+            only if required by law or to protect against security threats or abuse.
+          </p>
+          <p>
+            <strong className="text-foreground">How we protect it.</strong> The OAuth refresh token is encrypted
+            at rest (AES-256-GCM) with a key kept separate from the database, is only ever used server-side, and
+            is never sent to your browser. We don&apos;t store access tokens. All traffic to RunTheMic is encrypted
+            in transit over HTTPS.
+          </p>
+          <p>
+            <strong className="text-foreground">Retention and deletion.</strong> We keep the connection only
+            until you disconnect YouTube, delete your account, or revoke access. Clicking Disconnect in Settings
+            revokes RunTheMic&apos;s access with Google and deletes the stored token and account email from our
+            database immediately. If you revoke access from Google&apos;s security settings instead, the token we
+            hold stops working, and you can remove it from our systems by disconnecting in Settings or emailing us.
+            Playlists RunTheMic created remain on your YouTube account — they belong to you, and you can delete
+            them there at any time.
+          </p>
+          <p>
+            RunTheMic&apos;s use and transfer to any other app of information received from Google APIs will adhere
+            to the{" "}
+            <a
+              href="https://developers.google.com/terms/api-services-user-data-policy"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline underline-offset-2"
+            >
+              Google API Services User Data Policy
+            </a>
+            , including the Limited Use requirements.
+          </p>
+        </Section>
+
         <Section title="How we use your information">
           <ul className="list-disc space-y-1 pl-5">
             <li>To operate the core features you use: events, RSVPs, flyers, and the song queue.</li>
@@ -112,7 +179,7 @@ export default function PrivacyPage() {
         <Section title="Who we share data with">
           <p>We use a small number of third-party services to run RunTheMic, each only for its specific purpose:</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li><strong className="text-foreground">Google</strong> — sign-in and YouTube playlist management, as described above.</li>
+            <li><strong className="text-foreground">Google</strong> — YouTube search and playlist management, as described above. Google user data is not shared with any of the services below.</li>
             <li><strong className="text-foreground">Resend</strong> — delivering transactional email (verification, confirmations, notifications).</li>
             <li><strong className="text-foreground">Cloudflare</strong> — spam/bot filtering on public forms, and content delivery.</li>
             <li><strong className="text-foreground">Railway</strong> — application hosting and database infrastructure.</li>
@@ -122,8 +189,9 @@ export default function PrivacyPage() {
         <Section title="Data retention and deletion">
           <p>
             Deleting an event permanently removes that event and everything tied to it — RSVPs, the song
-            queue, flyer customizations, and its YouTube playlist link — immediately. To delete your organizer
-            account entirely, contact us at the email below.
+            queue, flyer customizations, and its YouTube playlist link — immediately (the playlist itself stays
+            on your YouTube account). To delete your organizer account and all data tied to it, email us at the
+            address below; we&apos;ll complete the deletion within 30 days.
           </p>
         </Section>
 
